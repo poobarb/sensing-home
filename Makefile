@@ -62,4 +62,4 @@ endif
 .PHONY: build_driver
 build_driver: prereq
 	@echo "Building SBC40 Driver"
-	cd fab && ./fab-sdc40_driver
+	cd fab && LD=gcc CC=gcc ./fab-sdc40_driver

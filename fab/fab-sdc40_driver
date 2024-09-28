@@ -8,17 +8,78 @@ from fab.steps.grab.folder import grab_folder
 from fab.steps.compile_c import compile_c
 from fab.steps.link import link_exe
 from fab.steps.preprocess import preprocess_c
+from fab.steps.c_pragma_injector import c_pragma_injector
+
+import datetime
 
 logger = getLogger('fab')
+
+SEMVER = ['version.major','version.minor','version.patch']
+
+def rmfullpath(path):
+    for root, dirs, files in path.walk(top_down=False):
+        for name in files:
+            (root / name).unlink()
+        for name in dirs:
+            (root / name).rmdir()
+    path.rmdir()
+
+def rmfiles(state, files):
+    for file in files:
+        (state.source_root / file).unlink()
+
+def extract_source(state):
+    grab_folder(state, src='../paho.mqtt.c/src')
+    grab_folder(state, src='../raspberry-pi-i2c-scd4x')
+    grab_folder(state, src='../src/sdc40_driver')
+    for root, dirs, _ in state.source_root.walk(top_down=False):
+        for name in dirs:
+            rmfullpath((root / name))
+    rmfiles(state, ['MQTTVersion.c',
+                    'MQTTAsync.c',
+                    'MQTTAsyncUtils.c',
+                    'scd4x_i2c_example_usage.c'])
+    grab_folder(state, src='../paho.mqtt.c/',dst_label='paho_ver')
+    for root, dirs, files in (state.source_root / 'paho_ver').walk(top_down=False):
+        for name in files:
+            if name not in SEMVER:
+                (root / name).unlink()
+        for name in dirs:
+            rmfullpath((root / name))
+
+def construct_in_file(state):
+    construct_version = dict()
+    for fname in SEMVER:
+        with open(str(state.source_root / 'paho_ver' / fname)) as infile:
+             construct_version[fname] = infile.read()
+    paho_ver = ".".join([construct_version[x] for x in SEMVER])
+    timestamp = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with open(str(state.source_root / 'VersionInfo.h.in'), 'r') as file: 
+        data = file.read() 
+  
+    data = data.replace('@CLIENT_VERSION@', paho_ver)
+    data = data.replace('@BUILD_TIMESTAMP@', timestamp) 
+    
+    with open(str(state.source_root / 'VersionInfo.h'), 'w') as file: 
+        file.write(data) 
 
 if __name__ == '__main__':
 
     with BuildConfig(project_label='sdc40_driver') as state:
-        grab_folder(state, src='../paho.mqtt.c/src')
-        grab_folder(state, src='../raspberry-pi-i2c-scd4x')
-        grab_folder(state, src='../src/sdc40_driver')
+        extract_source(state)
+        construct_in_file(state)
         find_source_files(state)
-        preprocess_c(state, common_flags=['-C', '-P', '-E', '-I'+str(state.source_root)])
+        c_pragma_injector(state)
+        preprocess_c(state, common_flags=['-I'+str(state.source_root), 
+                                          '-DOPENSSL=1', 
+                                          '-DPAHO_MQTT_EXPORTS=1',
+                                          '-D_GNU_SOURCE'])
         analyse(state, root_symbol='main')
-        compile_c(state)
-        link_exe(state)
+        compile_c(state, common_flags=['-c', 
+                                       '-fPIC',
+                                       '-Wall', 
+                                       '-fstrict-aliasing',
+                                       '-Wstrict-aliasing=1',
+                                       '-Wsign-conversion'])
+        link_exe(state, flags=['-fPIC', '-Wl,-init,MQTTClient_init'])
+
