@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+from logging import getLogger
+
+from fab.steps.analyse import analyse
+from fab.build_config import BuildConfig
+from fab.steps.find_source_files import find_source_files
+from fab.steps.grab.folder import grab_folder
+from fab.steps.compile_c import compile_c
+from fab.steps.link import link_exe
+from fab.steps.preprocess import preprocess_c
+
+logger = getLogger('fab')
+
+if __name__ == '__main__':
+
+    with BuildConfig(project_label='sdc40_driver') as state:
+        grab_folder(state, src='../paho.mqtt.c/src')
+        grab_folder(state, src='../raspberry-pi-i2c-scd4x')
+        grab_folder(state, src='../src/sdc40_driver')
+        find_source_files(state)
+        preprocess_c(state, common_flags=['-C', '-P', '-E', '-I'+str(state.source_root)])
+        analyse(state, root_symbol='main')
+        compile_c(state)
+        link_exe(state)
