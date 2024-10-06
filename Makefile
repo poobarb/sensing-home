@@ -1,17 +1,20 @@
 FAB_INSTALLED := $(shell pip freeze | grep sci-fab >/dev/null; echo $$?)
 PIP_INSTALLED := $(shell dpkg -l | grep -E 'python3-pip\s' >/dev/null; echo $$?)
+CHECKINSTALL_INSTALLED := $(shell dpkg -l | grep -E 'checkinstall\s' >/dev/null; echo $$?)
 CLANGPY_INSTALLED := $(shell pip freeze | grep clang >/dev/null; echo $$?)
 ifeq (${CLANGPY_INSTALLED},0)
 LIBCLANG_VER := $(shell pip freeze | grep clang | sed -E 's/.*==([1234567890]*)..*/\1/g')
 LIBCLANG_INSTALLED := $(shell dpkg -l | grep -E "libclang-${LIBCLANG_VER}-dev\s" >/dev/null; echo $$?)
 endif
 
+O_DIR := $(shell pwd)
+
 .PHONY: default
 default: build_driver
 
 
 .PHONY: prereq
-prereq: fab_install
+prereq: fab_install checkinstall_install
 
 
 .PHONY: fab_install
@@ -58,8 +61,26 @@ else
 	sudo apt-get install python3-pip
 endif
 
+.PHONY: checkinstall_install
+checkinstall_install:
+ifeq (${CHECKINSTALL_INSTALLED},0)
+	@echo "checkinstall is installed"
+else
+	@echo "checkinstall is not installed. Installing now"
+	sudo apt-get install checkinstall
+endif
+
 
 .PHONY: build_driver
 build_driver: prereq
 	@echo "Building SBC40 Driver"
-	cd fab && LD=gcc CC=gcc ./fab-sdc40_driver
+	cd fab && LD=gcc CPP=${O_DIR}/bin/gcc_wrap_cpp CC=gcc FAB_WORKSPACE=../fab-workspace/ ./fab-sdc40_driver
+
+.PHONY: fileinstall
+fileinstall:
+	sudo cp ./fab-workspace/sdc40_driver/main.exe /usr/bin/sensinghome_sdc40_driver
+	 
+.PHONY: package
+package:
+	make build_driver
+	./checkinstall/checkinstall-sdc40_driver

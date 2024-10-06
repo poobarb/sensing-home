@@ -71,13 +71,22 @@ if __name__ == '__main__':
         find_source_files(state)
         c_pragma_injector(state)
         preprocess_c(state, common_flags=['-I'+str(state.source_root), 
+                                          '-E',                     
+                                          '-P',       
+                                          '-xc',                                                                                                                                
                                           '-DOPENSSL=1', 
                                           '-DPAHO_MQTT_EXPORTS=1',
                                           '-D_GNU_SOURCE'])
         analyse(state, root_symbol='main')
         compile_c(state, common_flags=['-c', 
                                        '-fPIC',
-                                       '-Wall', 
+                                       '-Wall',
+                                       '-Werror',
+                                       '-Wextra',
+                                       '-std=gnu99',
+                                       '-pedantic',
+                                       '-pedantic-errors',
+                                       '-Wno-unknown-pragmas',
                                        '-fstrict-aliasing',
                                        '-Wstrict-aliasing=1',
                                        '-Wsign-conversion'])
