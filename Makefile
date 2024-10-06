@@ -79,7 +79,9 @@ build_driver: prereq
 .PHONY: fileinstall
 fileinstall:
 	sudo cp ./fab-workspace/sdc40_driver/main.exe /usr/bin/sensinghome_sdc40_driver
-	 
+	sudo mkdir -p /usr/share/doc/sensinghome-sdc40-driver/
+	sudo cp ./src/sdc40_driver/copyright /usr/share/doc/sensinghome-sdc40-driver/copyright
+    
 .PHONY: package
 package:
 	make build_driver

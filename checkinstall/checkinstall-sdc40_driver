@@ -1,3 +1,5 @@
 #!/bin/bash
 echo "checkinstall sdc40_driver packaging"
-sudo checkinstall make fileinstall
+VERSION=$(date -u +"%Y%m%d%H%M")
+sudo checkinstall -y -D --pkgname "sensinghome-sdc40-driver" --pkgversion="${VERSION}" --pkglicense "BSD 3-Clause License" --maintainer="sensinghome@ajvsoftware.com" --backup=no --deldoc=yes --deldesc=yes make fileinstall
+
