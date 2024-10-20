@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from logging import getLogger
 
+from pathlib import Path as pathlib_path
+
 from fab.steps.analyse import analyse
 from fab.build_config import BuildConfig
 from fab.steps.find_source_files import find_source_files
@@ -32,7 +34,9 @@ def extract_source(state):
     grab_folder(state, src='../paho.mqtt.c/src')
     grab_folder(state, src='../raspberry-pi-i2c-scd4x')
     grab_folder(state, src='../src/sdc40_driver')
-    for root, dirs, _ in state.source_root.walk(top_down=False):
+    srp = state.source_root.resolve()
+    logger.info('\nSource Root: {}\n'.format(srp))
+    for root, dirs, _ in pathlib_path.walk(srp, top_down=False):
         for name in dirs:
             rmfullpath((root / name))
     rmfiles(state, ['MQTTVersion.c',
@@ -40,7 +44,8 @@ def extract_source(state):
                     'MQTTAsyncUtils.c',
                     'scd4x_i2c_example_usage.c'])
     grab_folder(state, src='../paho.mqtt.c/',dst_label='paho_ver')
-    for root, dirs, files in (state.source_root / 'paho_ver').walk(top_down=False):
+    srp = (state.source_root / 'paho_ver').resolve()
+    for root, dirs, files in pathlib_path.walk(srp, top_down=False):
         for name in files:
             if name not in SEMVER:
                 (root / name).unlink()
