@@ -5,6 +5,9 @@ echo "~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
 O_DIR=$1
 
+cd $O_DIR
+git submodule update --init --recursive
+
 DPKG_L=$(dpkg -l)
 VENV_INSTALLED=$(echo "$DPKG_L" | grep -E 'python3-venv\s' >/dev/null; echo $?)
 
