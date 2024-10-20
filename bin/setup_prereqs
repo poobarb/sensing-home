@@ -1,0 +1,100 @@
+#!/bin/bash
+set -e
+echo "Configuring Pre-requisites"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+O_DIR=$1
+
+DPKG_L=$(dpkg -l)
+VENV_INSTALLED=$(echo "$DPKG_L" | grep -E 'python3-venv\s' >/dev/null; echo $?)
+
+if [ "$VENV_INSTALLED" -eq "0" ]; then
+  echo "Venv is installed"
+else
+  echo "Venv is not installed. Installing now"
+  sudo apt-get install python3-venv
+fi
+
+if [ ! -d $O_DIR/python_environment/sensing_home ]; then
+  mkdir -p $O_DIR/python_environment
+  cd $O_DIR/python_environment
+  python -m venv sensing_home
+fi
+
+source $O_DIR/python_environment/sensing_home/bin/activate
+
+PIP_FREEZE=$(python -m pip freeze)
+
+FAB_TEST=$(echo "$PIP_FREEZE" | grep "sci-fab" >/dev/null; echo $?)
+
+if [ "$FAB_TEST" -eq "0" ]; then
+  echo "FAB is installed"
+else
+  echo "FAB is not installed. Installing now"
+  python -m pip install sci-fab
+fi
+
+CLANG_TEST=$(echo "$PIP_FREEZE" | grep "clang" >/dev/null; echo $?)
+
+if [ "$CLANG_TEST" -eq "0" ]; then
+  echo "Clang python is installed"
+else
+  echo "Clang python is not installed. Installing now"
+  CLANG_PY_IDXVER=$(python -m pip index versions clang 2>/dev/null | grep 'Available' | awk -F':' '{print $2}' | tr ',' '\n')
+  CLANG_PY_AVAIL=$(echo "$CLANG_PY_IDXVER" | awk -F'.' '{print $1}'| sort -n | uniq )
+  CLANG_PY_TARGET=""
+  CLANG_DEB_AVAIL=$(apt-cache search "^libclang-[1234567890]+-dev" | awk -F'-' '{print $2}' | sort | uniq)
+  while IFS= read -r i; do
+    CLANG_DEB_PY_TEST=$(echo "$CLANG_DEB_AVAIL" | grep "$i"; echo $?)
+    if [ $CLANG_DEB_PY_TEST ]; then
+      CLANG_PY_TARGET=$(echo $i)
+    fi
+  done <<< "$CLANG_PY_AVAIL"
+  if [ -z "${CLANG_PY_TARGET}" ]; then
+    exit 1
+  fi
+  CLANG_PY_SELECT=$(echo "$CLANG_PY_IDXVER" | grep "$CLANG_PY_TARGET" | head -1)
+  python -m pip install clang==$(echo $CLANG_PY_SELECT)
+fi
+
+CLANGPY_VER=$(python -m pip freeze | grep "clang" | sed -E 's/.*==([1234567890]*)..*/\1/g')
+
+LIBCLANG_TEST=$(echo "$DPKG_L" | grep -E "libclang-${CLANGPY_VER}-dev\s" >/dev/null; echo $?)
+
+if [ "$VENV_INSTALLED" -eq "0" ]; then
+  echo "libclang is installed (version $CLANGPY_VER)"
+else
+  echo "libclang is not installed (version $CLANGPY_VER). Installing now"
+  sudo apt-get install "libclang-${CLANGPY_VER}-dev"
+fi
+
+MATPLOTLIB_TEST=$(echo "$PIP_FREEZE" | grep "matplotlib" >/dev/null; echo $?)
+
+if [ "$MATPLOTLIB_TEST" -eq "0" ]; then
+  echo "Matplotlib is installed"
+else
+  echo "Matplotlib is not installed. Installing now"
+  python -m pip install matplotlib
+fi
+
+GFORTRAN_TEST=$(echo "$DPKG_L" | grep -E "gfortran\s" >/dev/null; echo $?)
+
+if [ "$GFORTRAN_TEST" -eq "0" ]; then
+  echo "gfortran is installed"
+else
+  echo "gfortran is not installed. Installing now"
+  sudo apt-get install "gfortran"
+fi
+
+CHECKINSTALL_TEST=$(echo "$DPKG_L" | grep -E "checkinstall\s" >/dev/null; echo $?)
+
+if [ "$CHECKINSTALL_TEST" -eq "0" ]; then
+  echo "checkinstall is installed"
+else
+  echo "checkinstall is not installed. Installing now"
+  sudo apt-get install "checkinstall"
+fi
+
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+exit 0

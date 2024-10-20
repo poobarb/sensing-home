@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+O_DIR=$1
+cd ${O_DIR}/fab 
+export LD=gcc
+export CPP=${O_DIR}/bin/gcc_wrap_cpp 
+export CC=gcc
+export FAB_WORKSPACE=${O_DIR}/fab-workspace/
+source $O_DIR/python_environment/sensing_home/bin/activate
+$2
