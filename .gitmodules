@@ -1,0 +1,6 @@
+[submodule "paho.mqtt.c"]
+	path = paho.mqtt.c
+	url = https://github.com/eclipse/paho.mqtt.c.git
+[submodule "raspberry-pi-i2c-scd4x"]
+	path = raspberry-pi-i2c-scd4x
+	url = https://github.com/Sensirion/raspberry-pi-i2c-scd4x.git
