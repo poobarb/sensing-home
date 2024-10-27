@@ -51,8 +51,8 @@ else
   CLANG_PY_TARGET=""
   CLANG_DEB_AVAIL=$(apt-cache search "^libclang-[1234567890]+-dev" | awk -F'-' '{print $2}' | sort | uniq)
   while IFS= read -r i; do
-    CLANG_DEB_PY_TEST=$(echo "$CLANG_DEB_AVAIL" | grep "$i"; echo $?)
-    if [ $CLANG_DEB_PY_TEST ]; then
+    CLANG_DEB_PY_TEST=$(echo "$CLANG_DEB_AVAIL" | grep $i 2>&1 >/dev/null; echo $?)
+    if [ "$CLANG_DEB_PY_TEST" -eq "0" ]; then
       CLANG_PY_TARGET=$(echo $i)
     fi
   done <<< "$CLANG_PY_AVAIL"
@@ -99,6 +99,15 @@ if [ "$GFORTRAN_TEST" -eq "0" ]; then
 else
   echo "gfortran is not installed. Installing now"
   sudo apt-get install "gfortran"
+fi
+
+LIBSSLDEV_TEST=$(echo "$DPKG_L" | grep -E "libssl-dev\s" >/dev/null; echo $?)
+
+if [ "$LIBSSLDEV_TEST" -eq "0" ]; then
+  echo "libssl-dev is installed"
+else
+  echo "libssl-dev is not installed. Installing now"
+  sudo apt-get install "libssl-dev"
 fi
 
 CHECKINSTALL_TEST=$(echo "$DPKG_L" | grep -E "checkinstall\s" >/dev/null; echo $?)
