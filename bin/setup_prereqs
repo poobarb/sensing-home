@@ -80,7 +80,7 @@ MATPLOTLIB_TEST=$(echo "$PIP_FREEZE" | grep "matplotlib" >/dev/null; echo $?)
 if [ "$MATPLOTLIB_TEST" -eq "0" ]; then
   echo "Matplotlib is installed"
 else
-  LIBJPEGDEV_INSTALLED=$(echo "$DPKG_L" | grep -E 'libjpeg-dev(:|\s)\s' >/dev/null; echo $?)
+  LIBJPEGDEV_INSTALLED=$(echo "$DPKG_L" | grep -E 'libjpeg-dev(:|\s)' >/dev/null; echo $?)
 
   if [ "$LIBJPEGDEV_INSTALLED" -eq "0" ]; then
     echo "libjpeg-dev is installed"
