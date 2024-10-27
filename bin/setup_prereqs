@@ -68,7 +68,7 @@ CLANGPY_VER=$(python -m pip freeze | grep "clang" | sed -E 's/.*==([1234567890]*
 
 LIBCLANG_TEST=$(echo "$DPKG_L" | grep -E "libclang-${CLANGPY_VER}-dev\s" >/dev/null; echo $?)
 
-if [ "$VENV_INSTALLED" -eq "0" ]; then
+if [ "$LIBCLANG_TEST" -eq "0" ]; then
   echo "libclang is installed (version $CLANGPY_VER)"
 else
   echo "libclang is not installed (version $CLANGPY_VER). Installing now"
