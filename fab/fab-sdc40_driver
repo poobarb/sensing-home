@@ -18,8 +18,17 @@ logger = getLogger('fab')
 
 SEMVER = ['version.major','version.minor','version.patch']
 
+def pathlib_walk(path): 
+    for p in pathlib_path(path).iterdir():       
+        if p.is_dir(): 
+            yield from pathlib_walk(p)
+    a = [x for x in pathlib_path(path).iterdir() if x.is_dir()]
+    b = [x for x in pathlib_path(path).iterdir() if x.is_file()]
+    yield path.resolve(), a, b
+    
+
 def rmfullpath(path):
-    for root, dirs, files in path.walk(top_down=False):
+    for root, dirs, files in pathlib_walk(path):
         for name in files:
             (root / name).unlink()
         for name in dirs:
@@ -36,7 +45,7 @@ def extract_source(state):
     grab_folder(state, src='../src/sdc40_driver')
     srp = state.source_root.resolve()
     logger.info('\nSource Root: {}\n'.format(srp))
-    for root, dirs, _ in pathlib_path.walk(srp, top_down=False):
+    for root, dirs, _ in pathlib_walk(srp):
         for name in dirs:
             rmfullpath((root / name))
     rmfiles(state, ['MQTTVersion.c',
@@ -45,9 +54,10 @@ def extract_source(state):
                     'scd4x_i2c_example_usage.c'])
     grab_folder(state, src='../paho.mqtt.c/',dst_label='paho_ver')
     srp = (state.source_root / 'paho_ver').resolve()
-    for root, dirs, files in pathlib_path.walk(srp, top_down=False):
+    for root, dirs, files in pathlib_walk(srp):
+        semver_name = [(root / x) for x in SEMVER]
         for name in files:
-            if name not in SEMVER:
+            if name not in semver_name:
                 (root / name).unlink()
         for name in dirs:
             rmfullpath((root / name))
