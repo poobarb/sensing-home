@@ -15,7 +15,7 @@ if [ "$VENV_INSTALLED" -eq "0" ]; then
   echo "Venv is installed"
 else
   echo "Venv is not installed. Installing now"
-  sudo apt-get install python3-venv
+  sudo apt-get install -y "python3-venv"
 fi
 
 if [ ! -d $O_DIR/python_environment/sensing_home ]; then
@@ -72,7 +72,7 @@ if [ "$LIBCLANG_TEST" -eq "0" ]; then
   echo "libclang is installed (version $CLANGPY_VER)"
 else
   echo "libclang is not installed (version $CLANGPY_VER). Installing now"
-  sudo apt-get install "libclang-${CLANGPY_VER}-dev"
+  sudo apt-get install -y "libclang-${CLANGPY_VER}-dev"
 fi
 
 MATPLOTLIB_TEST=$(echo "$PIP_FREEZE" | grep "matplotlib" >/dev/null; echo $?)
@@ -86,7 +86,7 @@ else
     echo "libjpeg-dev is installed"
   else
     echo "libjpeg-dev is not installed. Installing now"
-    sudo apt-get install libjpeg-dev
+    sudo apt-get install -y libjpeg-dev
   fi
   echo "Matplotlib is not installed. Installing now"
   python -m pip install matplotlib
@@ -98,16 +98,16 @@ if [ "$GFORTRAN_TEST" -eq "0" ]; then
   echo "gfortran is installed"
 else
   echo "gfortran is not installed. Installing now"
-  sudo apt-get install "gfortran"
+  sudo apt-get install -y "gfortran"
 fi
 
-LIBSSLDEV_TEST=$(echo "$DPKG_L" | grep -E "libssl-dev\s" >/dev/null; echo $?)
+LIBSSLDEV_TEST=$(echo "$DPKG_L" | grep -E "libssl-dev(:|\s)" >/dev/null; echo $?)
 
 if [ "$LIBSSLDEV_TEST" -eq "0" ]; then
   echo "libssl-dev is installed"
 else
   echo "libssl-dev is not installed. Installing now"
-  sudo apt-get install "libssl-dev"
+  sudo apt-get install -y "libssl-dev"
 fi
 
 CHECKINSTALL_TEST=$(echo "$DPKG_L" | grep -E "checkinstall\s" >/dev/null; echo $?)
@@ -116,7 +116,7 @@ if [ "$CHECKINSTALL_TEST" -eq "0" ]; then
   echo "checkinstall is installed"
 else
   echo "checkinstall is not installed. Installing now"
-  sudo apt-get install "checkinstall"
+  sudo apt-get install -y "checkinstall"
 fi
 
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~"
